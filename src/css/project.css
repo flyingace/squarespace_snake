@@ -1,0 +1,22 @@
+body {
+  background-color: lightgray; }
+
+#screen {
+  display: block;
+  height: 800px;
+  width: 800px;
+  margin: 0 auto;
+  background-color: black; }
+
+.screen-pixel {
+  display: block;
+  float: left;
+  width: 38px;
+  height: 38px;
+  background-color: black;
+  border: white solid 1px; }
+  .screen-pixel.snake {
+    border-color: greenyellow;
+    background-color: greenyellow; }
+
+/*# sourceMappingURL=project.css.map */
