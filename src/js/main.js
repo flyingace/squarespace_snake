@@ -13,8 +13,8 @@ let turnInterval;
 let foodPixel = [];
 
 /**
- * Generate
- * Render an empty game screen
+ * Render an empty game screen using rowLength & columnLength values to create divs 
+ * for each pixel on the screen, each with an id corresponding to its location
  */
 function setUpScreen() {
     let htmlForPixels = '';
