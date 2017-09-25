@@ -36,7 +36,7 @@ gulp.task('archive:zip', (done) => {
     const archiveName = path.resolve(dirs.archive, `${pkg.name}_v${pkg.version}.zip`);
     const zip = archiver('zip');
     const files = glob.sync('**/*.*', {
-        'cwd': dirs.dist,
+        'cwd': dirs.docs,
         'dot': true // include hidden files
     });
     const output = fs.createWriteStream(archiveName);
@@ -50,7 +50,7 @@ gulp.task('archive:zip', (done) => {
 
     files.forEach( (file) => {
 
-        const filePath = path.resolve(dirs.dist, file);
+        const filePath = path.resolve(dirs.docs, file);
 
         // `zip.bulk` does not maintain the file
         // permissions, so we need to add files individually
@@ -69,7 +69,7 @@ gulp.task('archive:zip', (done) => {
 gulp.task('clean', (done) => {
     del([
         dirs.archive,
-        dirs.dist
+        dirs.docs
     ]).then( () => {
         done();
     });
@@ -88,7 +88,7 @@ gulp.task('copy', [
 gulp.task('copy:.htaccess', () =>
     gulp.src('node_modules/apache-server-configs/dist/.htaccess')
         .pipe(plugins().replace(/# ErrorDocument/g, 'ErrorDocument'))
-        .pipe(gulp.dest(dirs.dist))
+        .pipe(gulp.dest(dirs.docs))
 );
 
 gulp.task('copy:index.html', (done) =>
@@ -101,7 +101,7 @@ gulp.task('copy:index.html', (done) =>
             .pipe(plugins().replace(/{{JQUERY_VERSION}}/g, version))
             .pipe(plugins().replace(/{{MODERNIZR_VERSION}}/g, modernizrVersion))
             .pipe(plugins().replace(/{{JQUERY_SRI_HASH}}/g, hash))
-            .pipe(gulp.dest(dirs.dist));
+            .pipe(gulp.dest(dirs.docs));
         done();
     })
 );
@@ -109,12 +109,12 @@ gulp.task('copy:index.html', (done) =>
 gulp.task('copy:jquery', () =>
     gulp.src(['node_modules/jquery/dist/jquery.min.js'])
         .pipe(plugins().rename(`jquery-${pkg.devDependencies.jquery}.min.js`))
-        .pipe(gulp.dest(`${dirs.dist}/js/vendor`))
+        .pipe(gulp.dest(`${dirs.docs}/js/vendor`))
 );
 
 gulp.task('copy:license', () =>
     gulp.src('LICENSE.txt')
-        .pipe(gulp.dest(dirs.dist))
+        .pipe(gulp.dest(dirs.docs))
 );
 
 gulp.task('copy:main.css', () => {
@@ -127,7 +127,7 @@ gulp.task('copy:main.css', () => {
             browsers: ['last 2 versions', 'ie >= 9', '> 1%'],
             cascade: false
         }))
-        .pipe(gulp.dest(`${dirs.dist}/css`));
+        .pipe(gulp.dest(`${dirs.docs}/css`));
 });
 
 gulp.task('copy:misc', () =>
@@ -146,18 +146,18 @@ gulp.task('copy:misc', () =>
         // Include hidden files by default
         dot: true
 
-    }).pipe(gulp.dest(dirs.dist))
+    }).pipe(gulp.dest(dirs.docs))
 );
 
 gulp.task('copy:normalize', () =>
     gulp.src('node_modules/normalize.css/normalize.css')
-        .pipe(gulp.dest(`${dirs.dist}/css`))
+        .pipe(gulp.dest(`${dirs.docs}/css`))
 );
 
 gulp.task( 'modernizr', (done) =>{
 
     modernizr.build(modernizrConfig, (code) => {
-        fs.writeFile(`${dirs.dist}/js/vendor/modernizr-${pkg.devDependencies.modernizr}.min.js`, code, done);
+        fs.writeFile(`${dirs.docs}/js/vendor/modernizr-${pkg.devDependencies.modernizr}.min.js`, code, done);
     });
 
 });
