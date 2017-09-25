@@ -5,3 +5,5 @@ This game was built on top of [HTML5 Boilerplate](https://html5boilerplate.com/)
  function uses vanilla JS including many ES6 elements.
  
  The game can be viewed and played here: [https://flyingace.github.io/squarespace_snake/](https://flyingace.github.io/squarespace_snake/).
+ 
+ The code written for this project can be found in the ./src directory. The files in the ./docs directory are direct copies of those in ./src, added only to facilitate GitHub's hosting of the game on GitHub Pages.
