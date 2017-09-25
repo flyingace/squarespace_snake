@@ -1,124 +1,242 @@
 "use strict";
 
-//generate initial 2-d array for game's screen of pixels
-let row = new Array(20);
-row.fill('b');
-let grid = new Array(20);
-grid.fill(row);
-
+const rowLength = 20;
+const columnLength = 20;
 const screen = document.querySelector('#screen');
-let snakePixels = [[12,5], [13,5]];
-let direction = [-1,0];
+const startButton = document.querySelector('#start-button');
+const gameMessageField = document.querySelector('#game-message-field');
+const startingSnakePixels = [[12, 5], [13, 5]];
+const startingDirection = [-1, 0];
+let snakePixels;
+let direction;
+let turnInterval;
+let foodPixel = [];
 
-//render initial screen of pixels from grid array
-//TODO: With the current approach the need for the initial row and grid arrays is nil
+/**
+ * Generate
+ * Render an empty game screen
+ */
 function setUpScreen() {
     let htmlForPixels = '';
-    
-    grid.forEach(function(row, rIdx) {
-        row.forEach(function(cell, cIdx) {
-            htmlForPixels += `<div class="screen-pixel" id='r${rIdx}c${cIdx}'></div>`
-        })
-    });
+
+    for (let row = 0; row < rowLength; row++) {
+        for (let col = 0; col < columnLength; col++) {
+            htmlForPixels += `<div class="screen-pixel" id='r${row}c${col}'></div>`
+        }
+    }
+
     screen.innerHTML = htmlForPixels;
 }
 
-//convert 2 pixels in grid to snake pixels
+/**
+ * Initial setup of snake on screen
+ * setting the value of snakePixels to the default
+ * updating the style of the snakePixels so they display the snake's color
+ * setting the value of direction to the default
+ */
 function setUpSnake() {
-    snakePixels.forEach(function(snakePixel) {
-        paintSnakePixel(snakePixel);
-    })
+    snakePixels = Array.from(startingSnakePixels);
+    snakePixels.forEach(function (snakePixel) {
+        paintPixel(snakePixel, 'snake');
+    });
+    direction = Array.from(startingDirection);
 }
 
+/**
+ * Adding the keydown listener
+ */
 function addListeners() {
     document.addEventListener('keydown', onKeyDown);
 }
 
-//add 'snake' class to pixel
-function paintSnakePixel(snakePixel) {
-    document.querySelector(`#r${snakePixel[0]}c${snakePixel[1]}`).className += ' snake';
-}
-
-//remove 'snake' class from pixel
-function unPaintSnakePixel(snakePixel) {
-    document.querySelector(`#r${snakePixel[0]}c${snakePixel[1]}`).className = 'screen-pixel';
-}
-
-//snake moves in same direction unless prompted by arrow keys
-//arrow keys alter direction
-//direction is just where to add the next pixel in relation to the current pixel
-//every turn a new pixel is added to the front and a pixel is taken from the rear
-//unless the snake encounters "food"
-//snake is represented by an array which corresponds to the grid & row arrays?
-
-function turn() {
-    const newPixel = getNewPixel();
-    const lastPixel = snakePixels[snakePixels.length - 1];
-    //get coordinates of new pixel in direction
-    if (checkForCollision(newPixel)) {
-        //? is new pixel hitting self?
-        //game is over
-        console.log('Game Over');
+/**
+ * Randomly generate a pixel location on the game screen.
+ * If those coordinates aren't part of the snake
+ * style the pixel and set foodPixel to those coordinates.
+ * If it is part of the snake start over (recursively).
+ */
+function addFood() {
+    const foodPixelCoords = generateRandomCoordinates();
+    if (!isPixelInSnake(foodPixelCoords)) {
+        paintPixel(foodPixelCoords, 'food');
+        foodPixel = foodPixelCoords;
     } else {
-        //add pixel to snakePixels
-        snakePixels.unshift(newPixel);
-        //paint new pixel as snake
-        paintSnakePixel(newPixel);
-        snakePixels.pop();
-        unPaintSnakePixel(lastPixel);
+        addFood();
+    }
+}
+
+/**
+ * Style the pixel at pixelCoordinates by adding the value of type to the element's class names.
+ * The screen is styled by passing an empty string ('') as type.
+ * @param pixelCoords
+ * @param type
+ */
+function paintPixel(pixelCoords, type) {
+    document.querySelector(`#r${pixelCoords[0]}c${pixelCoords[1]}`).className = 'screen-pixel ' + type;
+}
+
+/**
+ *  Function handles actions which occur on each turn to simulate the snake's moving across the screen
+ *  and check whether the snake has "eaten food" or collided with itself or the wall
+ * @returns {boolean}
+ */
+function turn() {
+    const nextPixel = getNextPixel();
+    const lastPixel = snakePixels[snakePixels.length - 1];
+
+    if (checkForCollision(nextPixel)) {
+        endGame();
+        return false;
+    } else {
+        addNextPixel(nextPixel);
     }
 
-
-    //? is new pixel hitting food?
-        //remove food
-        //add new food on screen
-    //removePixelFromBack();
+    if (!_.isMatch(nextPixel, foodPixel)) {
+        removeLastPixel(lastPixel);
+    } else {
+        addFood();
+    }
 }
 
-function checkForCollision(newPixel) {
-    //is either coordinate more than 19 or less than 0?
-    const hasHitEdge = (newPixel[0] > 19 || newPixel[0] < 0 || newPixel[1] > 19 || newPixel[1] < 0);
-    //is the new coordinate already in the snakePixels array?
-    const hasHitSelf = (snakePixels.join('-').search(newPixel.join('')) > -1);
+/**
+ * Determine where the snake's "head" will be next and set coordinates as an array
+ * @returns {[x,y]}
+ */
+function getNextPixel() {
+    let currentPixel = snakePixels[0];
+    return [currentPixel[0] + direction[0], currentPixel[1] + direction[1]]
+}
+
+/**
+ * Add the nextPixel's coordinate array to snakePixels
+ * and update the style of the pixel so it displays the snake's color
+ * @param nextPixel
+ */
+function addNextPixel(nextPixel) {
+    snakePixels.unshift(nextPixel);
+    paintPixel(nextPixel, 'snake');
+}
+
+/**
+ * Remove the last pixel's coordinate array from snakePixels
+ * and update the style of the pixel so it displays the screen's color
+ * @param lastPixel
+ */
+function removeLastPixel(lastPixel) {
+    snakePixels.pop();
+    paintPixel(lastPixel, '');
+}
+
+/**
+ * Check to see whether the next pixel's coordinates will place it
+ * either outside of the grid or colliding with itself
+ * @param pixelCoords
+ * @returns {boolean}
+ */
+function checkForCollision(pixelCoords) {
+    const hasHitEdge = (
+        pixelCoords[0] >= rowLength ||
+        pixelCoords[0] < 0 ||
+        pixelCoords[1] >= columnLength ||
+        pixelCoords[1] < 0);
+
+    const hasHitSelf = isPixelInSnake(pixelCoords);
 
     return (hasHitEdge || hasHitSelf);
 }
 
-function changeDirection(indx) {
-    direction = directions[indx];
+/**
+ * Check whether the coordinate array for a pixel
+ * matches any of the pixel coordinate arrays in snakePixels
+ * @param pixelCoords
+ * @returns {boolean}
+ */
+function isPixelInSnake(pixelCoords) {
+    return snakePixels.some(function (snakePixel) {
+        return _.isMatch(snakePixel, pixelCoords);
+    })
 }
 
+/**
+ * After a keydown event occurs, if any of the arrow keys have been pressed,
+ * update the value of direction accordingly
+ * @param evt
+ */
 function onKeyDown(evt) {
-    switch(evt.key) {
+    switch (evt.key) {
     case 'ArrowUp':
-        direction = [-1,0];
+        direction = [-1, 0];
         break;
     case 'ArrowDown':
-        direction = [+1,0];
+        direction = [+1, 0];
         break;
     case 'ArrowRight':
-        direction = [0,1];
+        direction = [0, 1];
         break;
     case 'ArrowLeft':
-        direction = [0,-1];
+        direction = [0, -1];
         break;
     default:
         break;
     }
 }
 
-function covertCoordsToId(coords) {
-    return 'r' + coords[0] + 'c' + coords[1];
+/**
+ * Generate two random values from 0-19 inclusive
+ * and return them as values in an array
+ * @returns {[x,y]}
+ */
+function generateRandomCoordinates() {
+    const x = Math.floor(Math.random() * 20);
+    const y = Math.floor(Math.random() * 20);
+    return [x, y];
 }
 
-function getNewPixel() {
-    let currentPixel = snakePixels[0];
-    return [currentPixel[0] + direction[0], currentPixel[1] + direction[1]]
+/**
+ * Call functions which perform game setup actions
+ */
+function setupGame() {
+    setUpScreen();
+    setUpSnake();
+    addListeners();
 }
 
-setUpScreen();
-setUpSnake();
-addListeners();
+/**
+ * Call functions which start game play
+ * clear any existing messages
+ * remove the event listener on the "Start" button
+ * and cause turns to occur at a set interval
+ */
+function startGame() {
+    gameMessageField.innerHTML = ``;
+    startButton.removeEventListener('click', startGame);
+    setupGame();
+    addFood();
+    turnInterval = setInterval(turn, 150);
+}
 
-window.setInterval(turn, 500);
+/**
+ * Call functions which end game play
+ * preventing further turns from occurring
+ * displaying a message which alerts the player to the end of the game
+ * and re-add the event listener to the "Start" button so the game can be played again
+ */
+function endGame() {
+    clearInterval(turnInterval);
+    gameMessageField.innerHTML = `GAME OVER<br/>Congratulations! Your score was ${snakePixels.length - 2}!<br/><br/>
+Press the <strong>Start</strong> button to play again.`;
+    startButton.addEventListener('click', startGame);
+}
 
+/**
+ * Add message for the first time the game loads,
+ * add the event listener for the Start button
+ * and call the setupGame method to load the start screen
+ */
+function firstTimeSetup() {
+    gameMessageField.innerHTML = `Press the <strong>Start</strong> button to play.`;
+    startButton.addEventListener('click', startGame);
+    setupGame();
+}
+
+firstTimeSetup();

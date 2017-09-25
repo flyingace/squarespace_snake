@@ -1,11 +1,18 @@
 body {
     background-color: lightgray;
 }
+
+.main-wrapper {
+    display: block;
+    width: 800px;
+    height: 800px;
+    margin: 0 auto;
+}
+
 #screen {
     display: block;
     height: 800px;
     width: 800px;
-    margin: 0 auto;
     background-color: black;
 }
 
@@ -21,4 +28,23 @@ body {
         border-color: greenyellow;
         background-color: greenyellow;
     }
+
+    &.food {
+        background-color: red;
+    }
+}
+
+#game-message-field {
+    font-size: 24px;
+    text-align: center;
+}
+
+button {
+    display: block;
+    background-color: whitesmoke;
+    margin: 10px auto;
+    width: 80px;
+    height: 40px;
+    border-radius: 5px;
+    font-size: 18px;
 }
